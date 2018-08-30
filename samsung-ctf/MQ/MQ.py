@@ -17,19 +17,15 @@ class MQpoly:
     def apply(self, vals):
         if len(vals) != self.n:
             raise ValueError('Values for n variables should be given')
-
         quad, uni, c = self.terms
-
         ret = 0
         for i in range(self.n):
             for j in range(i, self.n):
                 ret += quad[i][j] * vals[i] * vals[j]
                 ret %= self.p
-
         for i in range(self.n):
             ret += uni[i] * vals[i]
             ret %= self.p
-
         ret += c
         ret %= self.p
 
@@ -74,19 +70,34 @@ class MQpoly:
 if __name__ == '__main__':
     p = 131
     n = 32
-
     with open('flag.txt', 'rb') as f:
         flg = f.read()
 
     with open('/dev/urandom', 'rb') as f:
         flg += f.read(n - len(flg))
+    mq = MQpoly.random_element(p,n)
+    data1 = b'\x01'+b'\x00'*31
+    lst_2 = [(b1 + b2) % p for b1, b2 in zip(data1, flg)]
+    val = mq.apply(flg)
+    val1 = mq.apply(lst_2)
+    print(val)
+    print(val1)
 
-    mq = MQpoly.random_element(p, n)
-    wline(str(mq))
+    diff = mq.terms[1][0] + mq.terms[0][0][0]
+    diff += mq.terms[0][0][0]*flg[0]
+    for i in range(n):
+      diff += mq.terms[0][0][i]*flg[i]
+    diff %= p
+    val1 = (val + diff)%p
+    print(val1)
+    """
     for i in range(n+1):
         lst_1 = sys.stdin.buffer.read(n)
         lst_2 = [(b1 + b2) % p for b1, b2 in zip(lst_1, flg)]
+        print(lst_1)
+        print(flg)
+        print(lst_2)
         clue = [mq.apply(lst_1), mq.apply(lst_2)]
 
         wline(hexlify(bytes(clue)).decode())
-
+    """
