@@ -1,0 +1,37 @@
+import math
+import sys
+from telnetlib import Telnet
+from phe import paillier
+import gmpy
+
+def dec(c,L,u,n):
+  return (((pow(c,L,n*n)-1)/n)*u)%n
+
+def ot_receiver(t, sigma):
+    #pk, sk = paillier.generate_paillier_keypair(n_length=4096)
+    #q = 1
+    p = 94275901239416253771811933035463626131219235947112359358913863842906788859831237999942106490712730480030321728559727679219497119396424122115147318037331452904489015364438034805081658766554505267519525587352074926337836682500150888902092667888583468025337756478089882176674166962712958779613939367604065206329L
+    q = 141413851859124380657717899553195439196828853920668539038370795764360183289746856999913159736069095720045482592839591518829245679094636183172720977055997179356733523046657052207622488149831757901279288381028112389506755023750226333353139001832875202038006634717134823265011250444069438169420909051406097809493L 
+    L = (p-1)*(q-1)
+    n = p*q
+    g = n+1
+    u = gmpy.invert(L,n)
+
+    t.write('{}\n'.format(n).encode())
+    c = pow(g,3*p,n*n)
+    t.write('{}\n'.format(c).encode())
+
+    c0 = int(t.read_until(b'\n').decode().strip())
+    c1 = int(t.read_until(b'\n').decode().strip())
+    v = dec(c0,L,u,n)
+    x_0 = v%p
+    v = dec(c1,L,u,n)
+    x_1 = v%q
+    print hex(x_0^x_1)[2:].decode('hex')
+    return
+
+
+if __name__ == '__main__':
+    #t = Telnet('127.0.0.1', 8888)
+    t = Telnet('ot.ctf.hackover.de', 1337)
+    ot_receiver(t, 1)
